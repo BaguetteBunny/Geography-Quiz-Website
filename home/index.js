@@ -320,28 +320,10 @@ let flags = JSON.parse(FLAGS_LIST);
 let answerBtns = document.querySelectorAll(".answer-1, .answer-2, .answer-3, .answer-4");
 let has_pressed = false;
 
-function generateMCQ() {
-  
-  // Reset button colors
-  has_pressed = false;
-  answerBtns.forEach((btn) => {
-    btn.style.setProperty("--after-bg-color", "#1CB0F6");
-  });
-
-  // Pick Category
-  if (categorized === false) {
-    var category_obj_keys = Object.keys(flags);
-    var category_ran_key = category_obj_keys[Math.floor(Math.random() *category_obj_keys.length)];
-    selected_category = flags[category_ran_key];
-  }
-  else{
-    selected_category = flags[category]
-  }
-
-  // Pick Flag
-  var flag_obj_keys = Object.keys(selected_category);
+function pickFlag(category) {
+  var flag_obj_keys = Object.keys(category);
   var flag_ran_key = flag_obj_keys[Math.floor(Math.random() *flag_obj_keys.length)];
-  my_flag = selected_category[flag_ran_key];
+  my_flag = category[flag_ran_key];
   document.getElementsByClassName("flag")[0].style.backgroundImage = `url('https://flagcdn.com/w320/${flag_ran_key}.png')`;
   if (flag_ran_key === "np" || flag_ran_key === "ch" || flag_ran_key === "va") {
     document.getElementsByClassName("flag")[0].style.transform = "scale(0.5)";
@@ -349,27 +331,50 @@ function generateMCQ() {
   else {
     document.getElementsByClassName("flag")[0].style.transform = "scale(1)";
   }
-  
-  // Randomize Answers
-  var answers = [];
+  return my_flag
+}
+
+function randomizeMCQAnswers(category) {
+  let answers = []
   while (answers.length < 3) {
-    var answer_obj_keys = Object.keys(selected_category);
+    var answer_obj_keys = Object.keys(category);
     var answer_ran_key = answer_obj_keys[Math.floor(Math.random() *answer_obj_keys.length)];
-    if (!answers.includes(selected_category[answer_ran_key]) && selected_category[answer_ran_key] !== my_flag) {
-      answers.push(selected_category[answer_ran_key]);
+    if (!answers.includes(category[answer_ran_key]) && category[answer_ran_key] !== my_flag) {
+      answers.push(category[answer_ran_key]);
     }
   }
+  return answers
+}
 
-  // Insert the correct answer at a random position
+function selectCategory(has_category) {
+  if (has_category === false) {
+    var category_obj_keys = Object.keys(flags);
+    var category_ran_key = category_obj_keys[Math.floor(Math.random() *category_obj_keys.length)];
+    return flags[category_ran_key];
+  }
+  else{
+    return flags[category]
+  }
+}
+function generateMCQ(has_category) {
+  has_pressed = false;
+  answerBtns.forEach((btn) => {
+    btn.style.setProperty("--after-bg-color", "#1CB0F6");
+  });
+
+  var selected_category = selectCategory(has_category)
+  var my_flag = pickFlag(selected_category);
+  var answers = randomizeMCQAnswers(selected_category);
+
   var correct_answer_index = Math.floor(Math.random() * 4);
   answers.splice(correct_answer_index, 0, my_flag);
 
-  // Set button text
   answerBtns.forEach((btn, index) => {
     btn.textContent = answers[index];
   });
 }
-generateMCQ();
+
+generateMCQ(categorized);
 
 // Resize button shit
 const resizeBtn = document.querySelector("[data-resize-btn]");
