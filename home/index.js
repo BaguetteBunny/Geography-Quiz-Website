@@ -312,6 +312,7 @@ const FLAGS_LIST = `{
   }
 }`;
 
+let queue = []
 let categorized = false
 category = "Asia"
 
@@ -319,6 +320,14 @@ let flags = JSON.parse(FLAGS_LIST);
 
 let answerBtns = document.querySelectorAll(".answer-1, .answer-2, .answer-3, .answer-4");
 let has_pressed = false;
+
+function addQueue(queue, value, max_length = 5) {
+  if (queue.length >= max_length) {
+    queue.shift();
+  }
+  queue.push(value);
+  return queue;
+}
 
 function pickFlag(category) {
   var flag_obj_keys = Object.keys(category);
@@ -356,15 +365,20 @@ function selectCategory(has_category) {
     return flags[category]
   }
 }
-function generateMCQ(has_category) {
+
+function generateMCQ(has_category, queue) {
   has_pressed = false;
   answerBtns.forEach((btn) => {
     btn.style.setProperty("--after-bg-color", "#1CB0F6");
   });
 
-  var selected_category = selectCategory(has_category)
+  var selected_category = selectCategory(has_category);
   var my_flag = pickFlag(selected_category);
+  while (queue.includes(my_flag)) {
+    var my_flag = pickFlag(selected_category);
+  }
   var answers = randomizeMCQAnswers(selected_category);
+  queue = addQueue(queue, my_flag)
 
   var correct_answer_index = Math.floor(Math.random() * 4);
   answers.splice(correct_answer_index, 0, my_flag);
@@ -372,9 +386,10 @@ function generateMCQ(has_category) {
   answerBtns.forEach((btn, index) => {
     btn.textContent = answers[index];
   });
+  return queue
 }
 
-generateMCQ(categorized);
+queue = generateMCQ(categorized, queue);
 
 // Resize button shit
 const resizeBtn = document.querySelector("[data-resize-btn]");
@@ -392,7 +407,7 @@ categoryBtns.forEach((btn) => {
     this.classList.add("selected");
     category = this.getAttribute("data-category-btn");
     categorized = true
-    generateMCQ()
+    queue = generateMCQ(categorized, queue);
   });
 });
 
@@ -402,7 +417,7 @@ randomizeBtn.addEventListener("click", function (e) {
   categoryBtns.forEach((b) => b.classList.remove("selected"));
   this.classList.add("selected");
   categorized = false;
-  generateMCQ()
+  queue = generateMCQ(categorized, queue);
 });
 
 // Answer button shit
@@ -430,5 +445,5 @@ answerBtns.forEach((btn) => {
 const nextBtn = document.querySelector(".next");
 nextBtn.addEventListener("click", function (e) {
   e.preventDefault();
-  generateMCQ();
+  queue = generateMCQ(categorized, queue);
 });
